@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, session, current_app
+from flask import Blueprint, request, jsonify, session, current_app, make_response
 from backend.models.models import User, InsuranceClaim, InsurancePolicy
 from backend.extensions import db
 from datetime import datetime
@@ -23,7 +23,9 @@ def login():
 
     if user:
         session['user_id'] = user.employee_id
-        return jsonify({"message": f"Welcome, {user.first_name}!"}), 200
+        response = make_response(jsonify({"message": f"Welcome, {user.first_name}!"}), 200)
+        response.set_cookie('session', session.sid, httponly=True, samesite='None', secure=True)
+        return response
     else:
         return jsonify({"error": "Invalid username or password"}), 401
 
@@ -35,9 +37,13 @@ def login():
 def get_dashboard():
     # Retrieve the logged-in user's ID from the session
     user_id = session.get('user_id')
+    print(f"Logged in user_id: {user_id}")  # Debugging
+    print(f"Retrieved user_id from session: {user_id}")  # Debugging
+    print(f"Session keys: {list(session.keys())}")
+    user_id = session.get('user_id')
+    print(f"Logged in user_id: {user_id}")
     if not user_id:
         return jsonify({"error": "Unauthorized"}), 401
-
     # Query claims related to the logged-in employee
     claims = db.session.query(InsuranceClaim).join(InsurancePolicy).filter(InsurancePolicy.employee_id == user_id).all()
 
@@ -73,6 +79,7 @@ def get_dashboard():
 
 @api.route('/claims', methods=['POST'])
 def create_claim():
+    print(f"Session before claim creation: {dict(session)}")  # Debugging
     data = request.get_json()
     new_claim = InsuranceClaim(
         insurance_id=data['insurance_id'],
@@ -81,13 +88,14 @@ def create_claim():
         expense_date=data['expense_date'],
         amount=data['amount'],
         purpose=data['purpose'],
-        follow_up=data['follow_up'],  # Added follow_up mapping
+        follow_up=data.get('follow_up', False),
         previous_claim_id=data.get('previous_claim_id'),
         status=data['status'],
-        last_edited_date=data['last_edited_date']
+        last_edited_date=data.get('last_edited_date', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     )
     db.session.add(new_claim)
     db.session.commit()
+    print(f"Session after claim creation: {dict(session)}")  # Debugging
     return jsonify({"message": "Claim created successfully!", "claim_id": new_claim.claim_id}), 201
 
 @api.route('/claims/<int:claim_id>', methods=['PUT'])
@@ -153,3 +161,10 @@ def delete_claim(claim_id):
     db.session.delete(claim)
     db.session.commit()
     return jsonify({"message": "Claim deleted successfully!"}), 200
+
+@api.route('/logout', methods=['POST'])
+def logout():
+    session.clear()
+    response = make_response({"message": "Logged out"})
+    response.set_cookie('session', '', expires=0)
+    return response
