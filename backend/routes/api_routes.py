@@ -37,11 +37,9 @@ def login():
 def get_dashboard():
     # Retrieve the logged-in user's ID from the session
     user_id = session.get('user_id')
-    print(f"Logged in user_id: {user_id}")  # Debugging
     print(f"Retrieved user_id from session: {user_id}")  # Debugging
     print(f"Session keys: {list(session.keys())}")
-    user_id = session.get('user_id')
-    print(f"Logged in user_id: {user_id}")
+
     if not user_id:
         return jsonify({"error": "Unauthorized"}), 401
     # Query claims related to the logged-in employee

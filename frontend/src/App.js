@@ -9,8 +9,11 @@ const App = () => {
   return (
     <Router>
       <Routes>
+        {/* Pass setLoggedInUser to Login */}
         <Route path="/" element={<Login setLoggedInUser={setLoggedInUser} />} />
-        <Route path="/dashboard" element={<Dashboard loggedInUser={loggedInUser} />} />
+
+        {/* Pass both loggedInUser and setLoggedInUser to Dashboard */}
+        <Route path="/dashboard" element={<Dashboard loggedInUser={loggedInUser} setLoggedInUser={setLoggedInUser} />} />
       </Routes>
     </Router>
   );
