@@ -164,5 +164,5 @@ def delete_claim(claim_id):
 def logout():
     session.clear()
     response = make_response({"message": "Logged out"})
-    response.set_cookie('session', '', expires=0)
+    response.set_cookie('flask_session', '', expires=0)
     return response

@@ -18,7 +18,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////Users/dabroskii/Downloads/in
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 #Configure session handling
-app.config['SESSION_COOKIE_NAME'] = 'flask_session'
 app.config['SESSION_COOKIE_PATH'] = '/'
 app.config['SESSION_COOKIE_DOMAIN'] = None
 app.config['SESSION_COOKIE_SECURE'] = True
