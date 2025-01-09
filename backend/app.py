@@ -3,12 +3,17 @@ from flask_cors import CORS
 from backend.extensions import db
 from backend.routes.api_routes import api
 from sqlalchemy import text
-from flask_session import Session
+from flask_jwt_extended import JWTManager
+from datetime import timedelta
 
 app = Flask(__name__)
 
-# Configure a secret key for session handling
-app.config['SECRET_KEY'] = '82992505'  # Replace with a strong, unique value
+# Configure a secret key for JWT Token
+app.config["JWT_SECRET_KEY"] = "82992505"  # Ensure this is strong and consistent
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
+app.config["JWT_ALGORITHM"] = "HS256"  # Use HS256 for consistency
+jwt = JWTManager(app)
+
 
 # Configure CORS with specific origin
 CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
@@ -16,17 +21,6 @@ CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
 # Configure SQLite database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////Users/dabroskii/Downloads/insurance-flask/backend/insurance_data.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-#Configure session handling
-app.config['SESSION_COOKIE_PATH'] = '/'
-app.config['SESSION_COOKIE_DOMAIN'] = None
-app.config['SESSION_COOKIE_SECURE'] = True
-app.config['SESSION_COOKIE_SAMESITE'] = 'None'  # Correctly set Samesite attribute
-app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_TYPE'] = 'filesystem'  # Store sessions in files
-app.config['SESSION_PERMANENT'] = False    # Make sessions non-permanent
-app.config['SESSION_USE_SIGNER'] = True    # Sign the session ID cookie
-Session(app)
 
 db.init_app(app)
 
@@ -42,11 +36,17 @@ app.register_blueprint(api, url_prefix='/api')
 def home():
     return "Check logs for table names!"
 
+# Global error handler
 @app.errorhandler(Exception)
 def handle_exception(e):
     response = jsonify({"error": str(e)})
     response.status_code = 500
     return response
+
+# Handle expired tokens
+@jwt.expired_token_loader
+def expired_token_callback(jwt_header, jwt_payload):
+    return jsonify({"error": "Session expired, please log in again"}), 401
 
 if __name__ == '__main__':
     app.run(debug=True)

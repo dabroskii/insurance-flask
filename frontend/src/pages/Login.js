@@ -1,15 +1,9 @@
 import React, { useState } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import axiosInstance from "../services/axios"; // Adjust the path based on your project structure
+import axiosInstance from "../services/axios";
 
 const Login = ({ setLoggedInUser }) => {
-  const [formData, setFormData] = useState({
-    username: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
-  const navigate = useNavigate(); // Use navigate for redirection
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -19,45 +13,55 @@ const Login = ({ setLoggedInUser }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axiosInstance.post("/login", formData); // Use axiosInstance
-      console.log("Login response headers:", response.headers);
-      console.log("Backend Response:", response.data); // Debugging response
-      setLoggedInUser(response.data.message); // Store logged-in user
-      setError(""); // Clear any previous errors
-      navigate("/dashboard"); // Redirect to the dashboard
+      const response = await axiosInstance.post("/login", formData);
+      // Extract user's name from the response
+      const userName = response.data.message.replace("Welcome, ", "").replace("!", "");
+      setLoggedInUser(userName);
+      localStorage.setItem("token", response.data.access_token);
+      setError("");
     } catch (err) {
-      console.error("Login Error:", err.response?.data || err.message); // Debugging error
-      setError(err.response?.data?.error || "Invalid username or password");
+      setError("Invalid username or password");
     }
   };
 
+
+
   return (
-    <div>
-      <h2>Login</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Username:</label>
-          <input
-            type="text"
-            name="username"
-            value={formData.username}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div>
-          <label>Password:</label>
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <button type="submit">Login</button>
-      </form>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="w-full max-w-sm p-6 bg-white rounded-lg shadow-md">
+        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+        {error && <p className="text-red-500 mb-4">{error}</p>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Username</label>
+            <input
+              type="text"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Password</label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 rounded-md"
+          >
+            Login
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
